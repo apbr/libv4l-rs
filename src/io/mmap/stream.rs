@@ -87,6 +87,17 @@ impl<'a> Stream<'a> {
             ..unsafe { mem::zeroed() }
         }
     }
+
+    /// Manually dequeues an item from the stream and returns a reference to it.
+    pub fn dequeue_item(&mut self) -> io::Result<(&[u8], &Metadata)> {
+        self.arena_index = CaptureStream::dequeue(self)?;
+
+        // The index used to access the buffer elements is given to us by v4l2, so we assume it
+        // will always be valid.
+        let bytes = &self.arena.bufs[self.arena_index];
+        let meta = &self.buf_meta[self.arena_index];
+        Ok((bytes, meta))
+    }
 }
 
 impl<'a> Drop for Stream<'a> {
